@@ -352,6 +352,7 @@ impl MappableCommand {
         extend_to_line_end_newline, "Extend to line end",
         signature_help, "Show signature help",
         insert_tab, "Insert tab char",
+        remove_tab, "Remove tab char",
         insert_newline, "Insert newline char",
         delete_char_backward, "Delete previous char",
         delete_char_forward, "Delete next char",
@@ -3299,6 +3300,12 @@ pub mod insert {
             indent,
         );
         doc.apply(&transaction, view.id);
+    }
+
+    pub fn remove_tab(cx: &mut Context) {
+        let (view, doc) = current!(cx.editor);
+
+        //TODO
     }
 
     pub fn insert_newline(cx: &mut Context) {

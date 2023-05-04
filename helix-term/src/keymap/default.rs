@@ -368,6 +368,7 @@ pub fn default() -> HashMap<Mode, Keymap> {
         "C-d" | "del" => delete_char_forward,
         "C-j" | "ret" => insert_newline,
         "tab" => insert_tab,
+        "S-tab" => insert_tab,
 
         "up" => move_visual_line_up,
         "down" => move_visual_line_down,
