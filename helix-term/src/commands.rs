@@ -3302,10 +3302,57 @@ pub mod insert {
         doc.apply(&transaction, view.id);
     }
 
+    /// Removes a single tab behind the cursor or up to a tab's-worth of whitespace
     pub fn remove_tab(cx: &mut Context) {
         let (view, doc) = current!(cx.editor);
 
-        //TODO
+        let text = doc.text().slice(..);
+        let selection = doc.selection(view.id);
+
+        let indent_width = doc.indent_width();
+
+        //Delete a tab if it is the previous character
+        //Otherwise, delete spaces until we've deleted a tab's worth or we reach a non-space char
+
+        let f = |range: &Range| {
+            let pos = range.cursor(text);
+            if pos == 0 {
+                return (0, 0, None);
+            }
+
+            let mut spaces = 0;
+            for i in 0..indent_width {
+                // Stay within bounds
+                if pos <= i {
+                    break;
+                }
+
+                if let Some(char) = text.get_char(pos - (i + 1)) {
+                    if char == '\t' {
+                        // Only delete a tab if it is the first charater behind the cursor
+                        if i == 0 {
+                            return (pos - 1, pos, None);
+                        } else {
+                            break;
+                        }
+                    }
+
+                    // Count the amount of whitespace behind the cursor and break on non-whitespace
+                    if char.is_whitespace() {
+                        spaces += 1;
+                    } else {
+                        break;
+                    }
+                } else {
+                    break;
+                }
+            }
+
+            (pos - spaces, pos, None)
+        };
+
+        let transaction = Transaction::change_by_selection(doc.text(), selection, f);
+        doc.apply(&transaction, view.id);
     }
 
     pub fn insert_newline(cx: &mut Context) {
@@ -3951,6 +3998,7 @@ fn paste_before(cx: &mut Context) {
     paste(cx, Paste::Before)
 }
 
+/// Returns a vector of all the line numbers currently selected
 fn get_lines(doc: &Document, view_id: ViewId) -> Vec<usize> {
     let mut lines = Vec::new();
 
@@ -4493,8 +4541,6 @@ fn match_brackets(cx: &mut Context) {
         doc.set_selection(view.id, selection);
     }
 }
-
-//
 
 fn jump_forward(cx: &mut Context) {
     let count = cx.count();
